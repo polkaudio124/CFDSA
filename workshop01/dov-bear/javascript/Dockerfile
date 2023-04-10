@@ -26,3 +26,4 @@ ENTRYPOINT node main
 
 # docker build -t ngch/cfdsa-dovbear:1.0.0 .
 # docker run -d -p 8080:8000 ngch/cfdsa-dovbear:1.0.0
+# docker run -d -p 8080:8000 -e INSTANCE_HASH="da2459e9c362" ngch/cfdsa-dovbear:1.0.0
