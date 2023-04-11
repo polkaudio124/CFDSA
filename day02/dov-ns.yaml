@@ -1,0 +1,14 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+   name: dov-ns
+   labels:
+      app: dov
+      name: dov-ns
+      created-by: ngch
+      dept: GIT
+
+# kubectl get all -n dov-ns --show-labels
+# kubectl scale deploy/dov-deploy -n dov-ns --replicas=1
+# kubectl port-forward deploy/dov-deploy -n dov-ns --address='0.0.0.0' 8080:3000

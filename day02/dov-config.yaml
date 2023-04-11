@@ -1,0 +1,31 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+   name: dov-cm
+   labels:
+      app: dov
+      name: dov-cm
+      created-by: ngch
+      dept: GIT
+   namespace: dov-ns
+data:
+   app_name: "My Dov Bear from configmap"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+   name: dov-secret
+   labels:
+      app: dov
+      name: dov-secret
+      created-by: ngch
+      dept: GIT
+   namespace: dov-ns
+type: Opaque
+data:
+   app_instance: SW5zdGFuY2UgbmFtZSBmcm9tIHNlY3JldA==
+
+# kubectl get all -n dov-ns --show-labels
+# kubectl scale deploy/dov-deploy -n dov-ns --replicas=1
+# kubectl port-forward deploy/dov-deploy -n dov-ns --address='0.0.0.0' 8080:3000
