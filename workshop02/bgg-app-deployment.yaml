@@ -11,6 +11,12 @@ metadata:
 spec: 
    # number of instance
    replicas: 3
+   minReadySeconds: 5
+   strategy:
+      type: RollingUpdate
+      rollingUpdate:
+         maxSurge: 1
+         maxUnavailable: 0
    # select pods belonging to this deployment
    selector:
       matchLabels:
@@ -41,3 +47,9 @@ spec:
               httpGet:
                  path: /healthz
                  port: 3000
+
+# kubectl apply -f bgg-app-deployment.yaml --record=true
+# kubectl -n bggns rollout history deployment/bgg-app-deployment
+# kubectl -n bggns rollout status deployment/bgg-app-deployment
+# watch kubectl get all,cm,secret -n bggns -owide
+# kubectl -n bggns rollout undo deployment/bgg-app-deployment --to-revision=8
