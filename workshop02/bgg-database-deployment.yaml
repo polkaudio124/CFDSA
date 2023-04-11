@@ -1,0 +1,30 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+   name: bgg-database-deployment
+   labels:
+      name: bgg-database-deployment
+      created-by: ngch
+      dept: GIT
+   namespace: bggns
+spec: 
+   # number of instance
+   replicas: 1
+   # select pods belonging to this deployment
+   selector:
+      matchLabels:
+         name: bgg-database-pod
+   # pod template
+   template:
+      metadata:
+         name: bgg-database-pod
+         labels:
+            name: bgg-database-pod
+      spec:
+         containers:
+         - name: bgg-database-container
+           image: stackupiss/bgg-database:v1
+           imagePullPolicy: IfNotPresent
+           ports:
+           - containerPort: 3306

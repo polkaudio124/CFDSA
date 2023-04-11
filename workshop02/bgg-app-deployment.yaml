@@ -1,0 +1,48 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+   name: bgg-app-deployment
+   labels:
+      name: bgg-app-deployment
+      created-by: ngch
+      dept: GIT
+   namespace: bggns
+spec: 
+   # number of instance
+   replicas: 3
+   # select pods belonging to this deployment
+   selector:
+      matchLabels:
+         name: bgg-app-pod
+   # pod template
+   template:
+      metadata:
+         name: bgg-app-pod
+         labels:
+            name: bgg-app-pod
+      spec:
+         containers:
+         - name: bgg-app-container
+           image: stackupiss/bgg-backend:v2
+           imagePullPolicy: IfNotPresent
+           env:
+           - name: BGG_DB_USER
+             value: root
+           - name: BGG_DB_HOST
+             value: bggdb-svc.bggns.svc.cluster.local
+           - name: BGG_DB_PASSWORD
+             valueFrom:
+                secretKeyRef:
+                   name: bgg-secret
+                   key: db_password
+           ports:
+           - containerPort: 3000
+           livenessProbe:
+              httpGet:
+                 path: /healthz
+                 port: 3000
+           readinessProbe:
+              httpGet:
+                 path: /healthz
+                 port: 3000
