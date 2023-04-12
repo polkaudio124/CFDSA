@@ -1,0 +1,69 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+   name: nginx-configmap
+   labels:
+      name: nginx-configmap
+      created-by: ngch
+      dept: GIT
+   namespace: dev
+data:
+   index.html: | 
+      <html>
+      <body>
+          <h1>NGCH WAS HERE!</h1>
+      </body>
+      </html>
+   
+   about.html: | 
+      <html>
+      <body>
+          <h1>This is about NGCH!</h1>
+      </body>
+      </html>
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+   name: nginx-deployment
+   labels:
+      name: nginx-deployment
+      created-by: ngch
+      dept: GIT
+   namespace: dev
+spec: 
+   # number of instance
+   replicas: 1
+   # select pods belonging to this deployment
+   selector:
+      matchLabels:
+         name: nginx-pod
+   # pod template
+   template:
+      metadata:
+         name: nginx-pod
+         labels:
+            name: nginx-pod
+      spec:
+         volumes:
+         - name: data-volume
+           emptyDir: {}
+         - name: html-volume
+           configMap:
+              name: nginx-configmap
+         containers:
+         - name: nginx-container
+           image: nginx
+           imagePullPolicy: IfNotPresent
+           ports:
+           - containerPort: 80
+           volumeMounts:
+           - name: data-volume
+             mountPath: /var/www/html
+           - name: html-volume
+             mountPath: /usr/share/nginx/html
+             readOnly: true
+             
+# kubectl port-forward deployment/nginx-deployment -n dev --address='0.0.0.0' 8080:80
+# kubectl exec -it deployment/nginx-deployment -n dev -- /bin/bash

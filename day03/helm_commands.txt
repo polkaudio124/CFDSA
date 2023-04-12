@@ -1,0 +1,11 @@
+https://artifacthub.io/packages/helm/ingress-nginx/ingress-nginx
+
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx --insecure-skip-tls-verify
+helm repo update
+helm repo list
+helm search repo ingress
+helm search hub ingress
+
+helm install cfdsa-ingress ingress-nginx/ingress-nginx -n ingress-nginx --create-namespace --insecure-skip-tls-verify
+helm ls -A
+

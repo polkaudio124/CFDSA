@@ -1,0 +1,9 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+#- bgg-configmap.yaml
+#- bgg-secret.yaml
+- bgg-app-deployment.yaml
+- bgg-database-deployment.yaml
+- bgg-service.yaml
