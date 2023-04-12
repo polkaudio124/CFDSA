@@ -1,0 +1,20 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+   name: bgg-database-pvc
+   labels:
+      name: bgg-database-pvc
+      created-by: ngch
+      dept: GIT
+   namespace: dev
+spec:
+   accessModes: 
+   - ReadWriteOnce
+   - ReadWriteMany
+   #- ReadOnlyMany
+   #- ReadWriteOncePod
+   storageClassName: do-block-storage-retain
+   resources:
+      requests:
+         storage: 1Gi

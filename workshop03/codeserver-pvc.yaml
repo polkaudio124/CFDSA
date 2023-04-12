@@ -1,0 +1,20 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+   name: codeserver-pvc
+   labels:
+      name: codeserver-pvc
+      created-by: ngch
+      dept: GIT
+   namespace: code
+spec:
+   accessModes: 
+   - ReadWriteOnce
+   #- ReadWriteMany
+   #- ReadOnlyMany
+   #- ReadWriteOncePod
+   storageClassName: do-block-storage-retain
+   resources:
+      requests:
+         storage: 1Gi

@@ -1,0 +1,120 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+   name: codeserver-secret
+   labels:
+      name: codeserver-secret
+      created-by: ngch
+      dept: GIT
+   namespace: code
+type: Opaque
+data:
+   PASSWORD: cGFzc3dvcmQ=
+   SUDO_PASSWORD: cGFzc3dvcmQ=
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+   name: codeserver-configmap
+   labels:
+      name: codeserver-configmap
+      created-by: ngch
+      dept: GIT
+   namespace: code
+data:
+   TZ: "Asia/Singapore"
+   DEFAULT_WORKSPACE: "/config/workspace"
+   PROXY_DOMAIN: "code-139.59.216.155.nip.io"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+   name: codeserver-deployment
+   labels:
+      name: codeserver-deployment
+      created-by: ngch
+      dept: GIT
+   namespace: code
+spec: 
+   # number of instance
+   replicas: 1
+   # select pods belonging to this deployment
+   selector:
+      matchLabels:
+         name: codeserver-pod
+   # pod template
+   template:
+      metadata:
+         name: codeserver-pod
+         labels:
+            name: codeserver-pod
+      spec:
+         volumes:
+         - name: workspace-vol
+           persistentVolumeClaim:
+              claimName: codeserver-pvc
+         containers:
+         - name: codeserver-container
+           image: linuxserver/code-server:amd64-latest
+           imagePullPolicy: IfNotPresent
+           resources:
+              limits:
+                 memory: "256Mi"
+                 cpu: "200m"
+           ports:
+           - containerPort: 8443
+           envFrom:
+           - configMapRef:
+                name: codeserver-configmap
+           - secretRef:
+                name: codeserver-secret
+           volumeMounts:
+           - name: workspace-vol
+             mountPath: /config/workspace
+---
+apiVersion: v1
+kind: Service
+metadata:
+   name: codeserver-service
+   labels:
+      name: codeserver-service
+      created-by: ngch
+      dept: GIT
+   namespace: code
+spec: 
+   type: ClusterIP
+   selector:
+      name: codeserver-pod
+   ports:
+      - name: http
+        port: 8443
+        targetPort: 8443
+        protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+   name: codeserver-ingress
+   labels:
+      name: codeserver-ingress
+      created-by: ngch
+      dept: GIT
+   namespace: code
+spec:
+   ingressClassName: nginx
+   rules:
+   - host: code-139.59.216.155.nip.io
+     http:
+        paths:
+        - path: /
+          pathType: Prefix
+          backend:
+             service: 
+                name: codeserver-service
+                port:
+                   number: 8443
+
+# kubectl apply -f codeserver.yaml
+# kubectl get all,cm,secret,ing,pvc,pv -ncode -owide
+# kubectl exec -it deployment/codeserver-deployment -n code -- /bin/bash

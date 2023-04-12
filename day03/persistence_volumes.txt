@@ -1,0 +1,12 @@
+kubectl get sc
+
+NAME                          PROVISIONER                 RECLAIMPOLICY   VOLUMEBINDINGMODE   ALLOWVOLUMEEXPANSION   AGE
+do-block-storage (default)    dobs.csi.digitalocean.com   Delete          Immediate           true                   25h
+do-block-storage-retain       dobs.csi.digitalocean.com   Retain          Immediate           true                   25h
+do-block-storage-xfs          dobs.csi.digitalocean.com   Delete          Immediate           true                   25h
+do-block-storage-xfs-retain   dobs.csi.digitalocean.com   Retain          Immediate           true                   25h
+
+RECLAIMPOLICY == what to do with volume if the claim is deleted
+VOLUMEBINDINGMODE == other options: lazy | defer - only provision when start using
+ALLOWVOLUMEEXPANSION == can only expand. cannot contract (reduce)
+

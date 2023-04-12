@@ -1,0 +1,124 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+   name: dov-configmap
+   labels:
+      app: dov
+      name: dov-configmap
+      created-by: ngch
+      dept: GIT
+   namespace: dev
+data:
+   app_name: "My Dov Bear from configmap"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+   name: dov-deployment
+   labels:
+      app: dov
+      name: dov-deployment
+      created-by: ngch
+      dept: GIT
+   namespace: dev
+spec: 
+   # number of instance
+   replicas: 3
+   # select pods belonging to this deployment
+   selector:
+      matchLabels:
+         apps: dov
+         name: dov-po
+   # pod template
+   template:
+      metadata:
+         name: dov-po
+         labels:
+            apps: dov
+            name: dov-po
+      spec:
+         containers:
+         - name: dov-container
+           image: stackupiss/dov-bear:v1
+           imagePullPolicy: IfNotPresent
+           env:
+           - name: INSTANCE_NAME
+             valueFrom:
+                configMapKeyRef:
+                   name: dov-configmap
+                   key: app_name
+           - name: INSTANCE_HASH
+             valueFrom:
+                fieldRef:
+                   fieldPath: status.hostIP
+                #secretKeyRef:
+                #   name: dov-secret
+                #   key: app_instance
+           ports:
+           - containerPort: 3000
+           livenessProbe:
+              httpGet:
+                 path: /healthz
+                 port: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+   name: dov-service
+   labels:
+      app: dov
+      name: dov-service
+      created-by: ngch
+      dept: GIT
+   namespace: dev
+spec: 
+   type: ClusterIP
+   #type: NodePort
+   #type: LoadBalancer
+   selector:
+      apps: dov
+      name: dov-po
+   ports:
+      - name: http
+        port: 8080
+        targetPort: 3000
+        protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+   name: dov-ingress
+   labels:
+      app: dov
+      name: dov-ingress
+      created-by: ngch
+      dept: GIT
+   namespace: dev
+   annotations:
+      nginx.ingress.kubernetes.io/limit-rps: "5"
+spec:
+   ingressClassName: nginx
+   rules:
+   - host: dov-139.59.216.155.nip.io
+     http:
+        paths:
+        - path: /
+          pathType: Prefix
+          backend:
+             service: 
+                name: dov-service
+                port:
+                   number: 8080
+        - path: /catalogue
+          pathType: Prefix
+          backend:
+             service: 
+                name: dov-catalogue-service
+                port:
+                   number: 8080
+
+# kubectl get ingressclass
+# nip.io
+# 139.59.216.155.nip.io
+# siege 
