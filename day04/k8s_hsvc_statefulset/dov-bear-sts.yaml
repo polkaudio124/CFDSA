@@ -1,0 +1,63 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dov-hsvc
+  labels:
+    app: dov
+    name: dov-hsvc
+spec:
+  clusterIP: None
+  selector:
+    app: dov
+    name: dov-po-sts
+  ports:
+  - port: 3000
+    targetPort: 3000
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: dov-sts
+  labels:
+    app: dov
+    name: dov-sts
+spec:
+  replicas: 3
+  serviceName: dov-hsvc
+  selector:
+    matchLabels:
+      app: dov
+      name: dov-po-sts
+  template:
+    metadata:
+      name: dov-po-sts
+      labels:
+        app: dov
+        name: dov-po-sts
+    spec:
+      containers:
+      - name: dov-container
+        image: ngch/cfdsa-fortune:1.0.0-alpha
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: INSTANCE_HASH
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        envFrom:
+        - configMapRef:
+            name: dov-cm
+        ports:
+        - containerPort: 3000
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 100m
+            memory: 128Mi
+
+# kubectl run netshoot -n dev -ti --restart=Never --rm --image nicolaka/netshoot -- /bin/bash
+# nslookup dov-hsvc.dev.svc.cluster.local
+# nslookup dov-sts-0.dov-hsvc.dev.svc.cluster.local

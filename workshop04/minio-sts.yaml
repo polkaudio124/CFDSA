@@ -1,0 +1,160 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+   name: minio-hsvc
+   labels:
+      name: minio-hsvc
+   namespace: minio
+spec:
+   clusterIP: None
+   selector:
+      name: minio-pod
+   ports:
+   - name: server
+     port: 9000
+     targetPort: 9000
+   - name: webconsole
+     port: 9090
+     targetPort: 9090
+---
+apiVersion: v1
+kind: Service
+metadata:
+   name: minio-svc
+   labels:
+      name: minio-svc
+   namespace: minio
+spec:
+   type: ClusterIP
+   selector:
+      name: minio-pod
+   ports:
+   - name: server
+     port: 9000
+     targetPort: 9000
+   - name: webconsole
+     port: 9090
+     targetPort: 9090
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+   name: minio-ingress
+   labels:
+      name: minio-ingress
+      created-by: ngch
+      dept: GIT
+   namespace: minio
+spec:
+   ingressClassName: nginx
+   rules:
+   - host: data-139.59.216.155.nip.io
+     http:
+        paths:
+        - path: /
+          pathType: Prefix
+          backend:
+             service: 
+                name: minio-svc
+                port:
+                   number: 9000
+   - host: console-139.59.216.155.nip.io
+     http:
+        paths:
+        - path: /
+          pathType: Prefix
+          backend:
+             service: 
+                name: minio-svc
+                port:
+                   number: 9090
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+   name: minio-sts
+   labels:
+      name: minio-sts
+   namespace: minio
+spec:
+  # unable to scale more than 3 as digitalocean limited my account to create more than 3 volumes
+  replicas: 3
+  serviceName: minio-hsvc
+  selector:
+     matchLabels:
+        name: minio-pod
+  volumeClaimTemplates:
+  - metadata: 
+       name: data-vol
+    spec:
+       accessModes:
+       - ReadWriteOnce
+       storageClassName: do-block-storage
+       resources:
+          requests:
+             storage: 1Gi
+  template:
+    metadata:
+      name: minio-pod
+      labels:
+        name: minio-pod
+    spec:
+      volumes:
+         - name: data-vol
+      initContainers:
+      - name: busybox
+        image: busybox
+        imagePullPolicy: IfNotPresent
+        command:
+        - /bin/sh
+        - -c
+        - "chown 1001:1001 /data"
+        volumeMounts:
+           - name: data-vol
+             mountPath: /data
+      containers:
+      - name: minio-container
+        image: bitnami/minio:latest
+        imagePullPolicy: IfNotPresent
+        #resources:
+        #   limits:
+        #      memory: "256Mi"
+        #      cpu: "200m"
+        command:
+        - minio
+        - server
+        - --address=:9000
+        - --console-address=:9090
+        - http://minio-sts-{0...2}.minio-hsvc.minio.svc.cluster.local/data
+        ports:
+        - name: server
+          containerPort: 9000
+        - name: webconsole
+          containerPort: 9090
+        livenessProbe:
+           httpGet:
+              path: /minio/health/live
+              port: 9000
+        readinessProbe:
+           httpGet:
+              path: /minio/health/ready
+              port: 9000
+        envFrom:
+        - configMapRef:
+             name: minio-configmap
+        - secretRef:
+             name: minio-secret
+        volumeMounts:
+           - name: data-vol
+             mountPath: /data
+
+# kubectl run netshoot -n minio -ti --restart=Never --rm --image nicolaka/netshoot -- /bin/bash
+# nslookup minio-sts-0.minio-hsvc.minio.svc.cluster.local
+# PsjyGGjb0ln9SR60
+# ceDaeWLg7h0ZrqyAryHTERpGL8NF9FTp
+# curl -k -LO https://dl.min.io/client/mc/release/linux-amd64/mc --create-dirs -o /data/CFDSA/minio/minio-binaries/mc
+# ./mc alias set mybucket http://data-139.59.216.155.nip.io PsjyGGjb0ln9SR60 ceDaeWLg7h0ZrqyAryHTERpGL8NF9FTp
+# ./mc ls mybucket
+# ./mc cp minio-sts.yaml mybucket/mybucket/minio-sts.yaml
+# ./mc rm --force -r mybucket/mybucket/minio-sts.yaml

@@ -1,0 +1,38 @@
+apiVersion: skaffold/v4beta4
+kind: Config
+metadata:
+   name: dev
+
+build:
+   artifacts:
+   - image: ngch/cfdsa-fortune
+     context: .
+   tagPolicy:
+      envTemplate:
+         template: "{{.IMAGE_TAG}}"
+#      gitCommit: {}
+    local: 
+       tryImportMissing: true
+       push:
+       useBuildkit:
+
+#manifests:
+#   kustomize:
+#      paths:
+#      - prod   
+#
+#deploy:
+#   kubectl:
+#      flags:
+#         #global:
+#         #- --kubeconfig
+#         #- /my/kubeconfig/config
+#         apply:
+#         - -oyaml
+#         delete:
+#         - --force
+#         - --grace-period=0
+
+# skaffold build
+# skaffold render --output release.yaml
+# skaffold run

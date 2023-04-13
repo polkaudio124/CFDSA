@@ -1,0 +1,33 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+   name: minio-netpol
+   labels:
+      name: minio-netpol
+   namespace: minio
+spec:
+   policyTypes:
+   - Ingress
+   podSelector:
+      matchLabels:
+         name: minio-pod
+   ingress:
+   - from:
+     - podSelector:
+          matchLabels:
+             app.kubernetes.io/component: controller
+             app.kubernetes.io/instance: cfdsa-ingress
+             app.kubernetes.io/name: ingress-nginx
+     - namespaceSelector:
+          matchLabels:
+             kubernetes.io/metadata.name: ingress-nginx
+             name: ingress-nginx
+   - from:
+     - namespaceSelector:
+          matchLabels:
+             kubernetes.io/metadata.name: minio
+          
+# watch kubectl -n minio get all,sts,pv,pvc,netpol --show-labels
+# kubectl -n ingress-nginx get pods -l app.kubernetes.io/component=controller -l app.kubernetes.io/instance=cfdsa-ingress -l app.kubernetes.io/name=ingress-nginx --show-labels
+# kubectl -n minio get pods -l name=minio-pod --show-labels

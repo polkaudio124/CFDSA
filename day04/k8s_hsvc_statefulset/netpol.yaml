@@ -1,0 +1,63 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+   name: deny-all
+   labels:
+      name: deny-all
+spec:
+   policyTypes:
+   - Ingress
+   - Egress
+   podSelector:
+      matchLabels:
+         name: mysql-pod
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+   name: allow-netshoot
+   labels:
+      name: allow-netshoot
+spec:
+   policyTypes:
+   - Ingress
+   - Egress
+   podSelector:
+      matchLabels:
+         name: mysql-pod
+   ingress:
+   - from: 
+     - podSelector: 
+          matchLabels:
+             run: dev-netshoot
+   - from: 
+     - namespaceSelector:
+          matchLabels:
+             kubernetes.io/metadata.name: code
+     ports:
+     - port: 3306
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+   name: allow-to-192.168
+   labels:
+      name: allow-to-192.168
+spec:
+   policyTypes:
+   - Egress
+   podSelector:
+      matchLabels:
+         name: mysql-pod
+   ingress:
+   - to: 
+     - ipBlock: 
+          cidr: "192.168.0.0/16"
+
+# watch kubectl -n dev get all,sts,pv,pvc,netpol --show-labels
+# kubectl run dev-netshoot -n dev -ti --restart=Never --rm --image nicolaka/netshoot -- /bin/bash
+# kubectl run code-netshoot -n code -ti --restart=Never --rm --image nicolaka/netshoot -- /bin/bash
+# nc -z -v -w3 mysql-sts-0.mysql-hsvc.dev.svc.cluster.local 3306
+# from to from is OR condition
+# if selectors (podSelector / namespaceSelector) in same from is AND condition

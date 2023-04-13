@@ -1,0 +1,89 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dov-deploy
+  labels:
+    app: dov
+    name: dov-deploy
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: dov
+      name: dov-po
+  template:
+    metadata:
+      name: dov-po
+      labels:
+        app: dov
+        name: dov-po
+    spec:
+      containers:
+      - name: dov-container
+        #image: chukmunnlee/go-dov-bear:v1
+        image: ngch/cfdsa-fortune:1.0.0-alpha
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: INSTANCE_HASH
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        envFrom:
+        - configMapRef:
+            name: dov-cm
+        ports:
+        - containerPort: 3000
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 100m
+            memory: 128Mi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dov-svc
+  labels:
+    app: dov
+    name: dov-svc
+spec:
+  type: ClusterIP
+  selector:
+    app: dov
+    name: dov-po
+  ports:
+  - port: 3000
+    targetPort: 3000
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: dov-hpa
+  labels:
+    app: dov
+    name: dov-hpa
+spec:
+   minReplicas: 1
+   maxReplicas: 4
+   scaleTargetRef:
+      apiVersion: apps/v1
+      kind: Deployment
+      name: dov-deploy
+   metrics:
+      - type: Resource
+        resource:
+           name: cpu
+           target:
+              type: Utilization
+              averageUtilization: 30
+      - type: Resource
+        resource:
+           name: memory
+           target:
+              type: Utilization
+              averageUtilization: 50
+              

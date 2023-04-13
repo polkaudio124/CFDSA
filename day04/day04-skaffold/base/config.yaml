@@ -1,0 +1,10 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dov-cm
+  labels:
+    app: dov
+    name: dov-cm
+data:
+  INSTANCE_NAME: dov-bear

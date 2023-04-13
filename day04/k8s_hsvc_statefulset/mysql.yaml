@@ -1,0 +1,62 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-hsvc
+  labels:
+    name: mysql-hsvc
+spec:
+  clusterIP: None
+  selector:
+    name: mysql-pod
+  ports:
+  - port: 3306
+    targetPort: 3306
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql-sts
+  labels:
+    name: mysql-sts
+spec:
+  replicas: 2
+  serviceName: mysql-hsvc
+  selector:
+    matchLabels:
+      name: mysql-pod
+  volumeClaimTemplates:
+  - metadata: 
+       name: data-vol
+    spec:
+       accessModes:
+       - ReadWriteOnce
+       storageClassName: do-block-storage
+       resources:
+          requests:
+             storage: 1Gi
+  template:
+    metadata:
+      name: mysql-pod
+      labels:
+        name: mysql-pod
+    spec:
+      volumes:
+         - name: data-vol
+      containers:
+      - name: mysql-container
+        image: mysql:8.0
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 3306
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: changeit
+        volumeMounts:
+           - name: data-vol
+             mountPath: /var/lib/mysql
+
+# kubectl run netshoot -n dev -ti --restart=Never --rm --image nicolaka/netshoot -- /bin/bash
+# nslookup mysql-hsvc.dev.svc.cluster.local
+# nslookup mysql-sts-0.mysql-hsvc.dev.svc.cluster.local
+# nslookup mysql-sts-1.mysql-hsvc.dev.svc.cluster.local
